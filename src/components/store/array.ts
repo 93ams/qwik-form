@@ -1,4 +1,4 @@
-import {FieldArrayPath, FieldValues} from "../types";
+import {FieldArrayPath, FieldValues, HasValue} from "../types";
 import {getUniqueId} from "../utils";
 
 export type ArraysStore<V extends FieldValues> = { [P in FieldArrayPath<V>]?: ArrayStore<V, P> }

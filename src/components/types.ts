@@ -121,3 +121,4 @@ export type ValidateForm<V extends FieldValues> = (values: PartialValues<V>) => 
 export type TransformField<V> = (value: Maybe<V>, event: Event, element: FieldElement) => MaybePromise<Maybe<V>>;
 
 export type StoreWithField<T, N extends keyof T> = {store: T, field: N}
+export interface HasValue<T> { value: T }

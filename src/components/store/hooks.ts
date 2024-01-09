@@ -13,15 +13,3 @@ export const useForm = <V extends FieldValues>(props: UseFormProps<V>) => {
     })
     return useStore(props.initial)
 }
-
-export type ArrayRef<T> = {
-    add: (t: T) => void
-    value?: T[]
-}
-export const useArray = <T,>() => {
-    const store: ArrayRef<T> = {
-        add: (t) =>
-            store.value?.push(t)
-    }
-    return store
-}

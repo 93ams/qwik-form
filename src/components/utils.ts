@@ -38,4 +38,6 @@ export function getPathValue(path: string, object: Record<string, any>): any {
 export const sortPathIndex = <V extends FieldValues>(name: FieldArrayPath<V>) =>
     (pathA: FieldPath<V> | FieldArrayPath<V>, pathB: FieldPath<V> | FieldArrayPath<V>) =>
         getPathIndex(name, pathA) - getPathIndex(name, pathB);
-export const sub = (path: string, name: any) => `${path}.${name}`
+export const sub = (path?: string, name?: any) => path !== undefined
+    ? (name !== undefined ? `${path}.${name}` : path)
+    : (name !== undefined ? name : '')

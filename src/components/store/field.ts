@@ -2,11 +2,11 @@ import {
     FieldElement,
     FieldPath,
     FieldPathValue,
-    FieldValues,
+    FieldValues, HasValue,
     TransformField,
     ValidateField
 } from "../types";
-import {QRL} from "@builder.io/qwik";
+import {$, QRL} from "@builder.io/qwik";
 
 export type FieldsStore<V extends FieldValues> = { [N in FieldPath<V>]?: FieldStore<V, N> }
 export type FieldStore<V extends FieldValues, P extends FieldPath<V> = FieldPath<V>> = {
