@@ -1,5 +1,6 @@
-import {component$, useStore} from "@builder.io/qwik";
-import {List, Group, Add, Rem} from "./components";
+import {$, component$} from "@builder.io/qwik";
+import {List, Group, Add, Rem, Input} from "./components";
+import {useForm} from "./components/store/hooks";
 import {initial} from "./components/zod";
 import {z} from "zod";
 
@@ -18,68 +19,58 @@ const init = {
         [2, 3],
     ],
 }
-const reset = JSON.stringify(init)
 export const ClientSide = component$(() => {
-    const store = useStore(init)
+    const {value, ...props} = useForm({
+        initial: init
+    })
     return <>
-        <form
-            preventdefault:reset onReset$={() =>
-                Object.assign(store, JSON.parse(reset))}
-            preventdefault:submit onSubmit$={(_, el) =>
-                (new FormData(el)).forEach(console.log)}
-        >
-            <Group value={store}>{c=><>
+        <h1>Client Side Object</h1>
+        <form {...props}>
+            <Group value={value}>{c => <>
                 <Group {...c('foo')}>{(c, store) => <div>
-                    <input {...c('nested')} />
-                    <br/>
+                    <Input {...c('nested')}/> <br/>
                     <List {...c('dsa')}>{(c, i) => <div key={c.name}>
-                        <label for={c.name}>{c.name}</label>
-                        <input {...c} onReset$={(ev, el) => console.log(el)}/>
-                        <Rem slice={store.dsa} i={i}>Rem</Rem>
-                        <br/>
+                        <Input {...c}/>
+                        <Rem slice={store.dsa} i={i}>Rem</Rem> <br/>
                     </div>}</List>
-                    <Add slice={store.dsa} value={''}>Add</Add>
-                    <br/>
+                    <Add slice={store.dsa} value={''}>Add</Add> <br/>
                 </div>}</Group>
                 <List {...c('asd')}>{(c, i) => <div key={c.name}>
-                    <Group {...c}>{(c) => <div key={c.name}>
-                        <label for={c.name}>{c.name}</label>
-                        <input {...c('deep')} />
+                    <Group {...c}>{c => <div key={c.name}>
+                        <Input {...c('deep')}/>
                     </div>}</Group>
-                    <Rem slice={store.asd} i={i}>Rem</Rem>
-                    <br/>
+                    <Rem slice={value.asd} i={i}>Rem</Rem> <br/>
                 </div>}</List>
-                <Add slice={store.asd} value={{deep: ''}}>Add</Add>
-                <br/>
+                <Add slice={value.asd} value={{deep: ''}}>Add</Add> <br/>
                 <List {...c('matrix')}>{(row, i) => <div key={row.name}>
                     <List {...row}>{(c, j) => <div key={c.name}>
-                        <label for={c.name}>{c.name}</label>
-                        <input {...c} type='number' min={0} max={20}/>
-                        <Rem slice={row.value} i={j}>Rem Y</Rem>
-                        <br/>
+                        <Input {...c} type='number' />
+                        <Rem slice={row.value} i={j}>Rem Y</Rem> <br/>
                     </div>}</List>
                     <Add slice={row.value} value={0}>Add Y</Add>
-                    <Rem slice={store.matrix} i={i}>Rem X</Rem>
-                    <br/>
+                    <Rem slice={value.matrix} i={i}>Rem X</Rem> <br/>
                 </div>}</List>
-                <Add slice={store.matrix} value={[0]}>Add X</Add>
-                <button type='submit'>Submit</button>
-                <button type='reset'>Reset</button>
+                <Add slice={value.matrix} value={[0]}>Add X</Add>
+                <div>
+                    <button type='submit'>Submit</button>
+                    <button type='reset'>Reset</button>
+                </div>
             </>}</Group>
         </form>
         <br/>
-        {JSON.stringify(store)}
+        {JSON.stringify(value)}
     </>
 })
-
 const Schema = z.object({
     name: z.object({
         first: z.string({
             required_error: 'Please enter your first name.',
-        }).min(3, 'Your name must have 3 characters or more.'),
+        }).min(3, 'Your name must have 3 characters or more.')
+            .default('John'),
         last: z.string({
             required_error: 'Please enter your last name.',
-        }).min(3, 'Your name must have 3 characters or more.'),
+        }).min(3, 'Your name must have 3 characters or more.')
+            .default('Doe'),
     }),
     age: z.number({
         required_error: 'Please enter your age.',
@@ -87,16 +78,17 @@ const Schema = z.object({
     emails: z.object({
         value: z.string({
             required_error: 'Please enter your email.',
-        }).email('The email address is badly formatted.'),
-        usage: z.string().array(),
+        }).email('The email address is poorly formatted.'),
+        usage: z.string().array().default(['']),
     }).array().default([{
         value: 'asd',
-        usage: ['test'],
+        usage: [''],
     }]),
 })
 const store = initial(Schema)
 export const ZodServerSide = component$(() =>
     <form>
+        <h1>Server Side Zod</h1>
         <Group value={store}>{c=><>
             <Group {...c('name')}>{c => <>
                 <input {...c('first')} />
@@ -107,7 +99,7 @@ export const ZodServerSide = component$(() =>
                 <Group {...c}>{c => <>
                     <input {...c('value')}/>
                     <List {...c('usage')}>{c =>
-                        <input {...c}/>
+                        <input {...c} type='number' />
                     }</List>
                 </>}</Group>
             }</List>
@@ -116,41 +108,38 @@ export const ZodServerSide = component$(() =>
         </>}</Group>
     </form>)
 
-
 export const ZodClientSide = component$(() => {
-    const store = useStore(initial(Schema))
+    const {value, errors, ...props} = useForm<z.infer<typeof Schema>>({
+        validate: $(Schema.safeParse),
+        initial: initial(Schema),
+    })
     return <>
-        <form
-            preventdefault:reset onReset$={() =>
-            Object.assign(store, JSON.parse(reset))}
-            preventdefault:submit onSubmit$={(_, el) =>
-            (new FormData(el)).forEach(console.log)}
-        >
-            <Group value={store}>{c => <>
+        <h1>Client Side Zod</h1>
+        <form {...props}>
+            <Group value={value}>{c => <>
                 <Group {...c('name')}>{c => <>
-                    <input {...c('first')} />
-                    <input {...c('last')} />
-                </>}</Group>
-                <input {...c('age')} type='number' />
+                    <Input {...c('first')} label={`First Name: `}/> <br/>
+                    <Input {...c('last')} label={`Last Name: `}/>
+                </>}</Group> <br/>
+                <Input {...c('age')} type='number' label={`Age: `}/> <br/>
                 <List {...c('emails')}>{(c, i) => <div key={c.name}>
-                    <Group {...c}>{(c, row) => <div key={c.name}>
-                        <input {...c('value')}/>
+                    <Group {...c}>{(c, row) => <>
+                        <Input {...c('value')} label={`Email #${i}: `}/> <br/>
                         <List {...c('usage')}>{(c, j) => <div key={c.name}>
-                            <label for={c.name}>{c.name}</label>
-                            <input {...c} type='number' min={0} max={20}/>
-                            <Rem slice={row.usage} i={j}>Rem</Rem>
-                            <br/>
+                            <Input {...c} type='number' label={`Usage #${i}/${j}: `}/>
+                            <Rem slice={row.usage} i={j}>Remove Usage</Rem> <br/>
                         </div>}</List>
-                        <Add slice={row.usage} value={''}>Add</Add>
-                    </div>}</Group>
-                    <Rem slice={store.emails} i={i}>Rem</Rem>
-                </div>}</List>
-                <Add slice={store.emails} value={{value: '', usage: []}}>Add</Add>
+                        <Add slice={row.usage} value={''}>Add Usage</Add>
+                    </>}</Group>
+                    <Rem slice={value.emails} i={i}>Remove Email</Rem>
+                </div>}</List> <br/>
+                <Add slice={value.emails} value={{value: '', usage: ['']}}>Add Email</Add>
                 <button type='submit'>Submit</button>
                 <button type='reset'>Reset</button>
             </>}</Group>
         </form>
         <br/>
-        { JSON.stringify(store) }
+        {JSON.stringify(value)}<br/>
+        {JSON.stringify(errors?.value)}
     </>
 })

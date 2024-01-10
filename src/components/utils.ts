@@ -41,3 +41,10 @@ export const sortPathIndex = <V extends FieldValues>(name: FieldArrayPath<V>) =>
 export const sub = (path?: string, name?: any) => path !== undefined
     ? (name !== undefined ? `${path}.${name}` : path)
     : (name !== undefined ? name : '')
+
+export const inputValue = (el: HTMLInputElement) =>
+    el.type === 'number'
+        ? el.valueAsNumber
+        : el.type === 'file'
+        ? el.files
+        : el.value
